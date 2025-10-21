@@ -9,36 +9,35 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 @Entity
-@Table(name = "vacancies")
+@Table(name = "companies")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Vacancy {
+public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-
-    @Column(length = 5000)
+    private String name;
     private String description;
+    private String location;
+    private String email;
+    private String phoneNumber;
+    private String website;
 
-    private Double salary;
-
-    private Long employerId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
-
-    @Column(name = "created_at")
     @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Vacancy> vacancies;
 }
