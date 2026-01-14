@@ -24,21 +24,3 @@ CREATE TABLE vacancies (
 
 CREATE INDEX IF NOT EXISTS idx_vacancy_company ON vacancies(company_id);
 CREATE INDEX IF NOT EXISTS idx_company_name ON companies(name);
-
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = NOW();
-RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER set_updated_at_company
-    BEFORE UPDATE ON companies
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER set_updated_at_vacancy
-    BEFORE UPDATE ON vacancies
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();

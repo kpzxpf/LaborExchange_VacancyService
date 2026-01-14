@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class VacancyDto {
-    private Long id;
+    private long id;
 
     @NotBlank(message = "Job title is required")
     private String title;

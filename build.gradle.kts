@@ -19,36 +19,34 @@ repositories {
 }
 
 dependencies {
-    dependencies {
-        // Spring Boot
-        implementation("org.springframework.boot:spring-boot-starter-web")
-        implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-        implementation("org.springframework.boot:spring-boot-starter-validation")
+    // Spring Boot
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
-        // Kafka
-        implementation("org.springframework.kafka:spring-kafka")
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
 
-        // Feign Client
-        implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.2")
+    // Feign Client
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.2")
 
-        // PostgreSQL
-        runtimeOnly("org.postgresql:postgresql")
+    // PostgreSQL
+    runtimeOnly("org.postgresql:postgresql")
 
-        // Flyway
-        implementation("org.flywaydb:flyway-core")
-        runtimeOnly("org.flywaydb:flyway-database-postgresql:11.8.0")
+    // Flyway
+    implementation("org.flywaydb:flyway-core")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql:11.8.0")
 
-        // Lombok
-        compileOnly("org.projectlombok:lombok")
-        annotationProcessor("org.projectlombok:lombok")
+    // Lombok
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
 
-        // MapStruct
-        implementation("org.mapstruct:mapstruct:1.6.3")
-        annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
+    // MapStruct
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 
-        // Testing
-        testImplementation("org.springframework.boot:spring-boot-starter-test")
-    }
+    // Testing
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.withType<Test> {
