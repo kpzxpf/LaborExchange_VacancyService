@@ -5,6 +5,11 @@ spring:
   application:
     name: vacancy-service
 
+  logging:
+    level:
+      org.springframework.cloud.gateway: INFO
+      com.vlz: DEBUG
+
   datasource:
     url: jdbc:postgresql://localhost:5435/vacancydb
     username: vacancyuser
