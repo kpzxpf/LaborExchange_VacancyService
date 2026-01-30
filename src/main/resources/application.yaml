@@ -10,6 +10,18 @@ spring:
       org.springframework.cloud.gateway: INFO
       com.vlz: DEBUG
 
+  clients:
+    user-service:
+      name: user-service
+      url: http://localhost:8082
+
+  retry:
+    max-attempts: 3
+    delay: 1000
+
+  vacancy-create:
+    role: EMPLOYER
+
   datasource:
     url: jdbc:postgresql://localhost:5435/vacancydb
     username: vacancyuser

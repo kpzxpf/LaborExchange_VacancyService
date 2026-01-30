@@ -4,10 +4,11 @@ import com.vlz.ladorexchange_vacancyservice.dto.VacancyDto;
 import com.vlz.ladorexchange_vacancyservice.entity.Vacancy;
 import com.vlz.ladorexchange_vacancyservice.mapper.VacancyMapper;
 import com.vlz.ladorexchange_vacancyservice.service.VacancyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/vacancies")
@@ -18,8 +19,10 @@ public class VacancyController {
     private final VacancyMapper vacancyMapper;
 
     @GetMapping
-    public List<VacancyDto> getAll() {
-        return vacancyMapper.toDtoList(service.getAll());
+    public Page<VacancyDto> getAll(Pageable pageable) {
+        Page<Vacancy> vacancyPage = service.getAll(pageable);
+
+        return vacancyPage.map(vacancyMapper::toDto);
     }
 
     @GetMapping("/{id}")
@@ -28,8 +31,8 @@ public class VacancyController {
     }
 
     @PostMapping
-    public VacancyDto create(@RequestBody Vacancy vacancy) {
-        return vacancyMapper.toDto(service.create(vacancy));
+    public VacancyDto create(@RequestBody @Valid VacancyDto vacancyDto) {
+        return vacancyMapper.toDto(service.create(vacancyDto));
     }
 
     @DeleteMapping("/{id}")
