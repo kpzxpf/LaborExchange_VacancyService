@@ -30,6 +30,9 @@ public class Vacancy {
 
     private Long employerId;
 
+    @Column(name = "is_published", nullable = false)
+    private Boolean isPublished = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;

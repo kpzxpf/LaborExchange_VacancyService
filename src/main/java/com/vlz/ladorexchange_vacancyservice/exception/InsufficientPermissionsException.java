@@ -1,4 +1,4 @@
-package com.vlz.ladorexchange_vacancyservice.dto.exception;
+package com.vlz.ladorexchange_vacancyservice.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

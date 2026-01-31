@@ -8,5 +8,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface VacancyRepository extends JpaRepository<Vacancy, Long> {
-    Page<Vacancy> findAll(Pageable pageable);
+    Page<Vacancy> findAllByIsPublishedTrue(Pageable pageable);
+    Page<Vacancy> findAllByEmployerId(Long employerId, Pageable pageable);
 }

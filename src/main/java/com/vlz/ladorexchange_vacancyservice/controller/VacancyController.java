@@ -35,6 +35,24 @@ public class VacancyController {
         return vacancyMapper.toDto(service.create(vacancyDto));
     }
 
+    @PostMapping("/update")
+    public VacancyDto update(@RequestBody @Valid VacancyDto vacancyDto,
+                             @RequestHeader("X-User-Id") Long userId) {
+        return vacancyMapper.toDto(service.update(vacancyDto, userId));
+    }
+
+    @PatchMapping("/{id}/publish")
+    public void publish(@PathVariable Long id,
+                        @RequestHeader("X-User-Id") Long userId) {
+        service.updatePublishStatus(id, userId, true);
+    }
+
+    @PatchMapping("/{id}/unpublish")
+    public void unpublish(@PathVariable Long id,
+                          @RequestHeader("X-User-Id") Long userId) {
+        service.updatePublishStatus(id, userId, false);
+    }
+
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id);

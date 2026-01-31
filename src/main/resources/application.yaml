@@ -42,7 +42,3 @@ spring:
 
 kafka:
   bootstrap-servers: localhost:9092
-
-clients:
-  user-service:
-    url: http://localhost:8082
