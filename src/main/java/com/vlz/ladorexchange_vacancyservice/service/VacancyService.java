@@ -48,7 +48,7 @@ public class VacancyService {
                 .description(vacancyDto.getDescription())
                 .salary(vacancyDto.getSalary())
                 .employerId(vacancyDto.getEmployerId())
-                .company(companyService.getById(vacancyDto.getId()))
+                .company(companyService.getByName(vacancyDto.getCompanyName()))
                 .build();
 
         return repository.save(vacancy);

@@ -4,6 +4,7 @@ import com.vlz.ladorexchange_vacancyservice.dto.CompanyDto;
 import com.vlz.ladorexchange_vacancyservice.entity.Company;
 import com.vlz.ladorexchange_vacancyservice.repository.CompanyRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,8 +50,16 @@ public class CompanyService {
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
+            log.error("Company id {} not found", id);
             throw new EntityNotFoundException("Company not found");
         }
         repository.deleteById(id);
+    }
+    @Transactional(readOnly = true)
+    public Company getByName(String companyName) {
+        return repository.findByName(companyName).orElseThrow(() -> {
+            log.error("Company name {} not found", companyName);
+            return new EntityNotFoundException("Company name " + companyName);
+        });
     }
 }

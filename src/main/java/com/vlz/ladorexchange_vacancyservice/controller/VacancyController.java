@@ -31,7 +31,11 @@ public class VacancyController {
     }
 
     @PostMapping
-    public VacancyDto create(@RequestBody @Valid VacancyDto vacancyDto) {
+    public VacancyDto create(
+            @RequestBody @Valid VacancyDto vacancyDto,
+            @RequestHeader("X-User-Id") Long userId) {
+        vacancyDto.setEmployerId(userId);
+
         return vacancyMapper.toDto(service.create(vacancyDto));
     }
 
