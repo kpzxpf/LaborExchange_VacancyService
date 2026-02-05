@@ -49,6 +49,7 @@ public class VacancyService {
                 .salary(vacancyDto.getSalary())
                 .employerId(vacancyDto.getEmployerId())
                 .company(companyService.getByName(vacancyDto.getCompanyName()))
+                .isPublished(vacancyDto.isPublished())
                 .build();
 
         return repository.save(vacancy);
@@ -64,7 +65,7 @@ public class VacancyService {
         vacancy.setDescription(vacancyDto.getDescription());
         vacancy.setSalary(vacancyDto.getSalary());
         vacancy.setEmployerId(vacancyDto.getEmployerId());
-        vacancy.setCompany(companyService.getById(vacancyDto.getId()));
+        vacancy.setCompany(companyService.getByName(vacancyDto.getCompanyName()));
 
         return repository.save(vacancy);
     }
@@ -80,11 +81,13 @@ public class VacancyService {
 
         validateOwnership(vacancy.getEmployerId(), userId);
 
-        if (!vacancy.getIsPublished()) {
-            log.error("id {} not published", id);
-            throw new InsufficientPermissionsException("This vacancy is private");
-        }
         vacancy.setIsPublished(status);
+        repository.save(vacancy);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Vacancy> getByEmployerId(Long employerId, Pageable pageable) {
+        return repository.findAllByEmployerId(employerId, pageable);
     }
 
     private void checkForRequiredRole(Long userId) {

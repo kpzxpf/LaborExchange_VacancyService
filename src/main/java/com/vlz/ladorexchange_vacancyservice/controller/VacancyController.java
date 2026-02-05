@@ -57,6 +57,8 @@ public class VacancyController {
         service.updatePublishStatus(id, userId, false);
     }
 
+
+
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id);

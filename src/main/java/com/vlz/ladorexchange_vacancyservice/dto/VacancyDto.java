@@ -31,4 +31,6 @@ public class VacancyDto {
 
     @PositiveOrZero(message = "Salary cannot be negative")
     private Double salary;
+
+    private boolean isPublished;
 }
