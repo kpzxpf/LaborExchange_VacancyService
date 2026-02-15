@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/vacancies")
 @RequiredArgsConstructor
@@ -57,7 +59,11 @@ public class VacancyController {
         service.updatePublishStatus(id, userId, false);
     }
 
-
+    @GetMapping("/employer/{userId}")
+    public Page<VacancyDto> getByEmployer(Pageable pageable, @PathVariable Long userId) {
+        return service.getByEmployerId(userId, pageable)
+                .map(vacancyMapper::toDto);
+    }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
