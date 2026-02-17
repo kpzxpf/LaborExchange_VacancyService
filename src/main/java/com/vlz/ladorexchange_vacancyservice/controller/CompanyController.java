@@ -34,6 +34,11 @@ public class CompanyController {
         return companyMapper.toDto(company);
     }
 
+    @GetMapping("/{id}/company")
+    public String getCompanyName(@PathVariable("id") Long id) {
+        return service.getCompanyNameByVacancyId(id);
+    }
+
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id);

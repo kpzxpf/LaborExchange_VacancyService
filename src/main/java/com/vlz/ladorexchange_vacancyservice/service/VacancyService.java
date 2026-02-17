@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Collection;
 
@@ -58,7 +59,7 @@ public class VacancyService {
     }
 
     @Transactional
-    public Vacancy update(@Valid VacancyDto vacancyDto, Long userId) {
+    public Vacancy update(@Valid @RequestBody VacancyDto vacancyDto, Long userId) {
         Vacancy vacancy = getById(vacancyDto.getId());
 
         validateOwnership(vacancy.getEmployerId(), userId);

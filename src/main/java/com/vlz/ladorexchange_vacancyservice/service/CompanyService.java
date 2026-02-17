@@ -62,4 +62,9 @@ public class CompanyService {
             return new EntityNotFoundException("Company name " + companyName);
         });
     }
+
+    @Transactional(readOnly = true)
+    public String getCompanyNameByVacancyId(Long vacancyId) {
+        return repository.findNameByVacancyId(vacancyId);
+    }
 }
