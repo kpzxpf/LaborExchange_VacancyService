@@ -1,8 +1,10 @@
 package com.vlz.ladorexchange_vacancyservice.service;
 
 import com.vlz.ladorexchange_vacancyservice.dto.VacancyDto;
+import com.vlz.ladorexchange_vacancyservice.dto.VacancyIndexEvent;
 import com.vlz.ladorexchange_vacancyservice.exception.InsufficientPermissionsException;
 import com.vlz.ladorexchange_vacancyservice.entity.Vacancy;
+import com.vlz.ladorexchange_vacancyservice.producer.VacancyIndexProducer;
 import com.vlz.ladorexchange_vacancyservice.repository.VacancyRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -15,7 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.Collection;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -25,6 +28,8 @@ public class VacancyService {
     private final VacancyRepository repository;
     private final CompanyService companyService;
     private final RoleRetryClient roleRetryClient;
+    private final VacancyIndexProducer vacancyIndexProducer;
+    private final SkillRetryClient skillRetryClient;
 
     @Value("${spring.vacancy-create.role}")
     private String needRoleForCreate;
@@ -55,7 +60,18 @@ public class VacancyService {
                 .isPublished(vacancyDto.isPublished())
                 .build();
 
-        return repository.save(vacancy);
+
+        Vacancy savedVacancy = repository.save(vacancy);
+
+        vacancyIndexProducer.send(VacancyIndexEvent.builder()
+                .id(savedVacancy.getId())
+                .title(savedVacancy.getTitle())
+                .description(savedVacancy.getDescription())
+                .companyName(savedVacancy.getCompany().getName())
+                .location(savedVacancy.getCompany().getLocation())
+                .skills(skillRetryClient.getNameSkillsByIds(List.copyOf(savedVacancy.getSkillIds())))
+                .build());
+        return savedVacancy;
     }
 
     @Transactional
@@ -91,6 +107,48 @@ public class VacancyService {
     @Transactional(readOnly = true)
     public Page<Vacancy> getByEmployerId(Long employerId, Pageable pageable) {
         return repository.findAllByEmployerId(employerId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Long> getSkillIds(Long vacancyId) {
+        Vacancy vacancy = getById(vacancyId);
+
+        return vacancy.getSkillIds() != null ? vacancy.getSkillIds() : new HashSet<>();
+    }
+
+    @Transactional
+    public void addSkill(Long vacancyId, Long skillId, Long userId) {
+        Vacancy vacancy = getById(vacancyId);
+        validateOwnership(vacancy.getEmployerId(), userId);
+
+        if (vacancy.getSkillIds() == null) {
+            vacancy.setSkillIds(new HashSet<>());
+        }
+
+        vacancy.getSkillIds().add(skillId);
+        repository.save(vacancy);
+    }
+
+    @Transactional
+    public void removeSkill(Long vacancyId, Long skillId, Long userId) {
+        Vacancy vacancy = getById(vacancyId);
+        validateOwnership(vacancy.getEmployerId(), userId);
+
+        if (vacancy.getSkillIds() != null) {
+            vacancy.getSkillIds().remove(skillId);
+        }
+
+        repository.save(vacancy);
+    }
+
+    @Transactional
+    public void updateSkills(Long vacancyId, Set<Long> skillIds, Long userId) {
+        Vacancy vacancy = getById(vacancyId);
+        validateOwnership(vacancy.getEmployerId(), userId);
+
+        vacancy.setSkillIds(skillIds != null ? skillIds : new HashSet<>());
+
+        repository.save(vacancy);
     }
 
     private void checkForRequiredRole(Long userId) {

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/vacancies")
@@ -68,5 +69,31 @@ public class VacancyController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id);
+    }
+
+    @GetMapping("/{id}/skills")
+    public Set<Long> getSkillIds(@PathVariable Long id) {
+        return service.getSkillIds(id);
+    }
+
+    @PostMapping("/{id}/skills/{skillId}")
+    public void addSkill(@PathVariable Long id,
+                         @PathVariable Long skillId,
+                         @RequestHeader("X-User-Id") Long userId) {
+        service.addSkill(id, skillId, userId);
+    }
+
+    @DeleteMapping("/{id}/skills/{skillId}")
+    public void removeSkill(@PathVariable Long id,
+                            @PathVariable Long skillId,
+                            @RequestHeader("X-User-Id") Long userId) {
+        service.removeSkill(id, skillId, userId);
+    }
+
+    @PutMapping("/{id}/skills")
+    public void updateSkills(@PathVariable Long id,
+                             @RequestBody Set<Long> skillIds,
+                             @RequestHeader("X-User-Id") Long userId) {
+        service.updateSkills(id, skillIds, userId);
     }
 }
