@@ -86,7 +86,19 @@ public class VacancyService {
         vacancy.setEmployerId(vacancyDto.getEmployerId());
         vacancy.setCompany(companyService.getByName(vacancyDto.getCompanyName()));
 
-        return repository.save(vacancy);
+        Vacancy saved = repository.save(vacancy);
+
+        vacancyIndexProducer.send(VacancyIndexEvent.builder()
+                .id(saved.getId())
+                .title(saved.getTitle())
+                .description(saved.getDescription())
+                .companyName(saved.getCompany().getName())
+                .location(saved.getCompany().getLocation())
+                .skills(skillRetryClient.getNameSkillsByIds(
+                        List.copyOf(saved.getSkillIds() != null ? saved.getSkillIds() : new HashSet<>())))
+                .build());
+
+        return saved;
     }
 
     @Transactional
@@ -147,8 +159,32 @@ public class VacancyService {
         validateOwnership(vacancy.getEmployerId(), userId);
 
         vacancy.setSkillIds(skillIds != null ? skillIds : new HashSet<>());
+        Vacancy saved = repository.save(vacancy);
 
-        repository.save(vacancy);
+        vacancyIndexProducer.send(VacancyIndexEvent.builder()
+                .id(saved.getId())
+                .title(saved.getTitle())
+                .description(saved.getDescription())
+                .companyName(saved.getCompany().getName())
+                .location(saved.getCompany().getLocation())
+                .skills(skillRetryClient.getNameSkillsByIds(List.copyOf(saved.getSkillIds())))
+                .build());
+    }
+
+    @Transactional(readOnly = true)
+    public void reindexAll() {
+        List<Vacancy> vacancies = repository.findAllByIsPublishedTrue();
+        log.info("Reindexing {} vacancies", vacancies.size());
+
+        vacancies.forEach(vacancy -> vacancyIndexProducer.send(VacancyIndexEvent.builder()
+                .id(vacancy.getId())
+                .title(vacancy.getTitle())
+                .description(vacancy.getDescription())
+                .companyName(vacancy.getCompany().getName())
+                .location(vacancy.getCompany().getLocation())
+                .skills(skillRetryClient.getNameSkillsByIds(
+                        List.copyOf(vacancy.getSkillIds() != null ? vacancy.getSkillIds() : new HashSet<>())))
+                .build()));
     }
 
     private void checkForRequiredRole(Long userId) {

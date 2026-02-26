@@ -42,9 +42,11 @@ public class VacancyController {
         return vacancyMapper.toDto(service.create(vacancyDto));
     }
 
-    @PostMapping("/update")
-    public VacancyDto update(@RequestBody @Valid VacancyDto vacancyDto,
+    @PutMapping("/{id}")
+    public VacancyDto update(@PathVariable Long id,
+                             @RequestBody @Valid VacancyDto vacancyDto,
                              @RequestHeader("X-User-Id") Long userId) {
+        vacancyDto.setId(id);
         return vacancyMapper.toDto(service.update(vacancyDto, userId));
     }
 
@@ -95,5 +97,10 @@ public class VacancyController {
                              @RequestBody Set<Long> skillIds,
                              @RequestHeader("X-User-Id") Long userId) {
         service.updateSkills(id, skillIds, userId);
+    }
+
+    @PostMapping("/reindex")
+    public void reindex() {
+        service.reindexAll();
     }
 }

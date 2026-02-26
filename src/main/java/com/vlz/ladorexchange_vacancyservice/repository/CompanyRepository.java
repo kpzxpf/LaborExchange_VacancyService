@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface CompanyRepository extends JpaRepository<Company, Long> {
     Optional<Company> findByName(String companyName);
 
+    Optional<Company> findByEmployerId(Long employerId);
+
     @Query("SELECT c.name FROM Company c JOIN Vacancy v ON v.company.id = c.id WHERE v.id = :vacancyId")
     String findNameByVacancyId(@Param("vacancyId") Long vacancyId);
 }

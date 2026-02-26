@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,4 +35,6 @@ public class VacancyDto {
     private Double salary;
 
     private boolean isPublished;
+
+    private LocalDateTime createdAt;
 }

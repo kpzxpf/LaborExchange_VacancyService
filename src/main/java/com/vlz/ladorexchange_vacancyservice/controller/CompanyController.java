@@ -28,10 +28,27 @@ public class CompanyController {
         return companyMapper.toDto(service.getById(id));
     }
 
+    @GetMapping("/my")
+    public CompanyDto getMy(@RequestHeader("X-User-Id") Long userId) {
+        return companyMapper.toDto(service.getByEmployerId(userId));
+    }
+
+    @GetMapping("/employer/{employerId}")
+    public CompanyDto getByEmployerId(@PathVariable Long employerId) {
+        return companyMapper.toDto(service.getByEmployerId(employerId));
+    }
+
     @PostMapping
-    public CompanyDto create(@RequestBody @Valid CompanyDto dto) {
+    public CompanyDto create(@RequestBody @Valid CompanyDto dto,
+                             @RequestHeader("X-User-Id") Long userId) {
+        dto.setEmployerId(userId);
         Company company = service.create(dto);
         return companyMapper.toDto(company);
+    }
+
+    @PutMapping("/{id}")
+    public CompanyDto update(@PathVariable Long id, @RequestBody @Valid CompanyDto dto) {
+        return companyMapper.toDto(service.update(id, dto));
     }
 
     @GetMapping("/{id}/company")

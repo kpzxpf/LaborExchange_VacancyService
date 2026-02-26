@@ -5,10 +5,12 @@ spring:
   application:
     name: vacancy-service
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   kafka:
     bootstrap-servers: localhost:9092
-    consumer:
-      group-id: vacancy-group
     topics:
       indexing-vacancy: indexing-vacancy
 

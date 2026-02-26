@@ -36,6 +36,7 @@ public class CompanyService {
     @Transactional
     public Company create(CompanyDto dto) {
         Company company = Company.builder()
+                .employerId(dto.getEmployerId())
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .location(dto.getLocation())
@@ -45,6 +46,27 @@ public class CompanyService {
                 .build();
 
         return repository.save(company);
+    }
+
+    @Transactional
+    public Company update(Long id, CompanyDto dto) {
+        Company company = getById(id);
+        company.setName(dto.getName());
+        company.setDescription(dto.getDescription());
+        company.setLocation(dto.getLocation());
+        company.setEmail(dto.getEmail());
+        company.setPhoneNumber(dto.getPhoneNumber());
+        company.setWebsite(dto.getWebsite());
+        return repository.save(company);
+    }
+
+    @Transactional(readOnly = true)
+    public Company getByEmployerId(Long employerId) {
+        return repository.findByEmployerId(employerId)
+                .orElseThrow(() -> {
+                    log.error("Company not found for employer {}", employerId);
+                    return new EntityNotFoundException("Company not found for employer " + employerId);
+                });
     }
 
     @Transactional

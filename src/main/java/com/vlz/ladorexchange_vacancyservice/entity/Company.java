@@ -3,8 +3,11 @@ package com.vlz.ladorexchange_vacancyservice.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,14 +16,20 @@ import java.util.Set;
 
 @Entity
 @Table(name = "companies")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = "vacancies")
 public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "employer_id")
+    private Long employerId;
 
     private String name;
     private String description;
