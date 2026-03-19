@@ -1,6 +1,7 @@
 package com.vlz.ladorexchange_vacancyservice.service;
 
 import com.vlz.ladorexchange_vacancyservice.client.SkillServiceClient;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import java.util.Set;
 public class SkillRetryClient {
     private final SkillServiceClient skillServiceClient;
 
+    @CircuitBreaker(name = "skillService", fallbackMethod = "getNameSkillsByIdsFallback")
     @Retryable(
             retryFor = { Exception.class },
             maxAttemptsExpression = "${spring.retry.max-attempts}",
@@ -35,9 +37,14 @@ public class SkillRetryClient {
         return new HashSet<>(skillServiceClient.findSkillNamesByIds(skillIds));
     }
 
+    public Set<String> getNameSkillsByIdsFallback(List<Long> skillIds, Exception e) {
+        log.warn("SkillService circuit breaker open for getNameSkillsByIds: {}", e.getMessage());
+        return Collections.emptySet();
+    }
+
     @Recover
-    public String recover(Exception e, Long id) {
-        log.error("All retry attempts failed for user id: {}. Service is unavailable.", id);
+    public Set<String> recover(Exception e, List<Long> skillIds) {
+        log.error("All retry attempts failed for skillIds: {}. Service is unavailable.", skillIds);
 
         throw new ResponseStatusException(
                 HttpStatus.SERVICE_UNAVAILABLE,

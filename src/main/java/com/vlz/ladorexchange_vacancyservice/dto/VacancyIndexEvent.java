@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Getter
@@ -18,4 +19,6 @@ public class VacancyIndexEvent {
     private String companyName;
     private String location;
     private Set<String> skills;
+    private Double salary;
+    private LocalDateTime createdAt;
 }

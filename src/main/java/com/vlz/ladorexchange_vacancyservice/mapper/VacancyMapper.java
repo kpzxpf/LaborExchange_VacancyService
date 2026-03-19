@@ -10,5 +10,6 @@ import org.mapstruct.ReportingPolicy;
 public interface VacancyMapper {
 
     @Mapping(target = "companyName", source = "company.name")
+    @Mapping(target = "createdAt", source = "createdAt")
     VacancyDto toDto(Vacancy vacancy);
 }

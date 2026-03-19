@@ -4,6 +4,7 @@ import com.vlz.ladorexchange_vacancyservice.dto.VacancyDto;
 import com.vlz.ladorexchange_vacancyservice.dto.VacancyIndexEvent;
 import com.vlz.ladorexchange_vacancyservice.exception.InsufficientPermissionsException;
 import com.vlz.ladorexchange_vacancyservice.entity.Vacancy;
+import com.vlz.ladorexchange_vacancyservice.mapper.VacancyMapper;
 import com.vlz.ladorexchange_vacancyservice.producer.VacancyIndexProducer;
 import com.vlz.ladorexchange_vacancyservice.repository.VacancyRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -11,6 +12,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,6 +34,7 @@ public class VacancyService {
     private final RoleRetryClient roleRetryClient;
     private final VacancyIndexProducer vacancyIndexProducer;
     private final SkillRetryClient skillRetryClient;
+    private final VacancyMapper vacancyMapper;
 
     @Value("${spring.vacancy-create.role}")
     private String needRoleForCreate;
@@ -39,14 +44,26 @@ public class VacancyService {
         return repository.findAllByIsPublishedTrue(pageable);
     }
 
+    // Internal entity fetch — no Redis cache (avoids Hibernate PersistentSet serialization issues)
     @Transactional(readOnly = true)
-    public Vacancy getById(Long id) {
+    public Vacancy findById(Long id) {
         return repository.findById(id).orElseThrow(() -> {
             log.error("id not found {}", id);
             return new EntityNotFoundException("id not found " + id);
         });
     }
 
+    // Public DTO fetch — safe to cache in Redis (plain POJO, no Hibernate proxies)
+    @Cacheable(value = "vacancies", key = "#id")
+    @Transactional(readOnly = true)
+    public VacancyDto getById(Long id) {
+        return vacancyMapper.toDto(findById(id));
+    }
+
+    @Caching(evict = {
+        @CacheEvict(value = "vacancies:list", allEntries = true),
+        @CacheEvict(value = "vacancies:employer", allEntries = true)
+    })
     @Transactional
     public Vacancy create(VacancyDto vacancyDto) {
         checkForRequiredRole(vacancyDto.getEmployerId());
@@ -56,7 +73,7 @@ public class VacancyService {
                 .description(vacancyDto.getDescription())
                 .salary(vacancyDto.getSalary())
                 .employerId(vacancyDto.getEmployerId())
-                .company(companyService.getByName(vacancyDto.getCompanyName()))
+                .company(companyService.findOrCreateByName(vacancyDto.getCompanyName(), vacancyDto.getEmployerId()))
                 .isPublished(vacancyDto.isPublished())
                 .build();
 
@@ -69,14 +86,22 @@ public class VacancyService {
                 .description(savedVacancy.getDescription())
                 .companyName(savedVacancy.getCompany().getName())
                 .location(savedVacancy.getCompany().getLocation())
-                .skills(skillRetryClient.getNameSkillsByIds(List.copyOf(savedVacancy.getSkillIds())))
+                .salary(savedVacancy.getSalary())
+                .createdAt(savedVacancy.getCreatedAt())
+                .skills(skillRetryClient.getNameSkillsByIds(
+                        List.copyOf(savedVacancy.getSkillIds() != null ? savedVacancy.getSkillIds() : new HashSet<>())))
                 .build());
         return savedVacancy;
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "vacancies", key = "#vacancyDto.id"),
+        @CacheEvict(value = "vacancies:list", allEntries = true),
+        @CacheEvict(value = "vacancies:employer", allEntries = true)
+    })
     @Transactional
     public Vacancy update(@Valid @RequestBody VacancyDto vacancyDto, Long userId) {
-        Vacancy vacancy = getById(vacancyDto.getId());
+        Vacancy vacancy = findById(vacancyDto.getId());
 
         validateOwnership(vacancy.getEmployerId(), userId);
 
@@ -84,7 +109,7 @@ public class VacancyService {
         vacancy.setDescription(vacancyDto.getDescription());
         vacancy.setSalary(vacancyDto.getSalary());
         vacancy.setEmployerId(vacancyDto.getEmployerId());
-        vacancy.setCompany(companyService.getByName(vacancyDto.getCompanyName()));
+        vacancy.setCompany(companyService.findOrCreateByName(vacancyDto.getCompanyName(), vacancyDto.getEmployerId()));
 
         Vacancy saved = repository.save(vacancy);
 
@@ -94,6 +119,8 @@ public class VacancyService {
                 .description(saved.getDescription())
                 .companyName(saved.getCompany().getName())
                 .location(saved.getCompany().getLocation())
+                .salary(saved.getSalary())
+                .createdAt(saved.getCreatedAt())
                 .skills(skillRetryClient.getNameSkillsByIds(
                         List.copyOf(saved.getSkillIds() != null ? saved.getSkillIds() : new HashSet<>())))
                 .build());
@@ -101,18 +128,30 @@ public class VacancyService {
         return saved;
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "vacancies", key = "#id"),
+        @CacheEvict(value = "vacancies:list", allEntries = true),
+        @CacheEvict(value = "vacancies:employer", allEntries = true)
+    })
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Long userId) {
+        Vacancy vacancy = findById(id);
+        validateOwnership(vacancy.getEmployerId(), userId);
         repository.deleteById(id);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "vacancies", key = "#id"),
+        @CacheEvict(value = "vacancies:list", allEntries = true),
+        @CacheEvict(value = "vacancies:employer", allEntries = true)
+    })
     @Transactional
     public void updatePublishStatus(Long id, Long userId, boolean status) {
-        Vacancy vacancy = getById(id);
+        Vacancy vacancy = findById(id);
 
         validateOwnership(vacancy.getEmployerId(), userId);
 
-        vacancy.setIsPublished(status);
+        vacancy.setPublished(status);
         repository.save(vacancy);
     }
 
@@ -123,14 +162,18 @@ public class VacancyService {
 
     @Transactional(readOnly = true)
     public Set<Long> getSkillIds(Long vacancyId) {
-        Vacancy vacancy = getById(vacancyId);
+        Vacancy vacancy = findById(vacancyId);
 
         return vacancy.getSkillIds() != null ? vacancy.getSkillIds() : new HashSet<>();
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "vacancies", key = "#vacancyId"),
+        @CacheEvict(value = "vacancies:list", allEntries = true)
+    })
     @Transactional
     public void addSkill(Long vacancyId, Long skillId, Long userId) {
-        Vacancy vacancy = getById(vacancyId);
+        Vacancy vacancy = findById(vacancyId);
         validateOwnership(vacancy.getEmployerId(), userId);
 
         if (vacancy.getSkillIds() == null) {
@@ -141,9 +184,13 @@ public class VacancyService {
         repository.save(vacancy);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "vacancies", key = "#vacancyId"),
+        @CacheEvict(value = "vacancies:list", allEntries = true)
+    })
     @Transactional
     public void removeSkill(Long vacancyId, Long skillId, Long userId) {
-        Vacancy vacancy = getById(vacancyId);
+        Vacancy vacancy = findById(vacancyId);
         validateOwnership(vacancy.getEmployerId(), userId);
 
         if (vacancy.getSkillIds() != null) {
@@ -153,9 +200,13 @@ public class VacancyService {
         repository.save(vacancy);
     }
 
+    @Caching(evict = {
+        @CacheEvict(value = "vacancies", key = "#vacancyId"),
+        @CacheEvict(value = "vacancies:list", allEntries = true)
+    })
     @Transactional
     public void updateSkills(Long vacancyId, Set<Long> skillIds, Long userId) {
-        Vacancy vacancy = getById(vacancyId);
+        Vacancy vacancy = findById(vacancyId);
         validateOwnership(vacancy.getEmployerId(), userId);
 
         vacancy.setSkillIds(skillIds != null ? skillIds : new HashSet<>());
@@ -167,7 +218,9 @@ public class VacancyService {
                 .description(saved.getDescription())
                 .companyName(saved.getCompany().getName())
                 .location(saved.getCompany().getLocation())
-                .skills(skillRetryClient.getNameSkillsByIds(List.copyOf(saved.getSkillIds())))
+                .salary(saved.getSalary())
+                .createdAt(saved.getCreatedAt())
+                .skills(skillRetryClient.getNameSkillsByIds(List.copyOf(saved.getSkillIds() != null ? saved.getSkillIds() : new HashSet<>())))
                 .build());
     }
 
@@ -182,6 +235,8 @@ public class VacancyService {
                 .description(vacancy.getDescription())
                 .companyName(vacancy.getCompany().getName())
                 .location(vacancy.getCompany().getLocation())
+                .salary(vacancy.getSalary())
+                .createdAt(vacancy.getCreatedAt())
                 .skills(skillRetryClient.getNameSkillsByIds(
                         List.copyOf(vacancy.getSkillIds() != null ? vacancy.getSkillIds() : new HashSet<>())))
                 .build()));

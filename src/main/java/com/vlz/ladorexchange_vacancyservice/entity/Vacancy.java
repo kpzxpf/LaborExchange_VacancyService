@@ -38,13 +38,13 @@ public class Vacancy {
     private Long employerId;
 
     @Column(name = "is_published", nullable = false)
-    private Boolean isPublished = false;
+    private boolean isPublished = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "vacancy_skills", joinColumns = @JoinColumn(name = "vacancy_id"))
     @Column(name = "skill_id")
     private Set<Long> skillIds;
