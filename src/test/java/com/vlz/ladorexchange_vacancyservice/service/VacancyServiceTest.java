@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.vlz.ladorexchange_vacancyservice.dto.VacancyDto;
+import com.vlz.ladorexchange_vacancyservice.entity.Company;
 import com.vlz.ladorexchange_vacancyservice.entity.Vacancy;
 import com.vlz.ladorexchange_vacancyservice.exception.InsufficientPermissionsException;
+import com.vlz.ladorexchange_vacancyservice.mapper.VacancyMapper;
+import com.vlz.ladorexchange_vacancyservice.producer.VacancyIndexProducer;
 import com.vlz.ladorexchange_vacancyservice.repository.VacancyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,12 +34,24 @@ class VacancyServiceTest {
     @Mock
     private RoleRetryClient roleRetryClient;
 
+    @Mock
+    private VacancyIndexProducer vacancyIndexProducer;
+
+    @Mock
+    private SkillRetryClient skillRetryClient;
+
+    @Mock
+    private VacancyMapper vacancyMapper;
+
     @InjectMocks
     private VacancyService vacancyService;
 
     private final String REQUIRED_ROLE = "EMPLOYER";
     private final Long USER_ID = 10L;
     private final Long VACANCY_ID = 1L;
+
+    private final Company stubCompany = Company.builder()
+            .id(1L).name("Best Company").location("Moscow").build();
 
     @BeforeEach
     void setUp() {
@@ -56,7 +71,11 @@ class VacancyServiceTest {
                     .build();
 
             when(roleRetryClient.getUserRoleById(USER_ID)).thenReturn(REQUIRED_ROLE);
-            when(repository.save(any(Vacancy.class))).thenAnswer(i -> i.getArgument(0));
+            when(companyService.findOrCreateByName("Best Company", USER_ID)).thenReturn(stubCompany);
+            when(repository.save(any(Vacancy.class))).thenAnswer(i -> {
+                Vacancy v = i.getArgument(0);
+                return Vacancy.builder().id(1L).title(v.getTitle()).employerId(v.getEmployerId()).company(v.getCompany()).build();
+            });
 
             Vacancy result = vacancyService.create(dto);
 
@@ -83,9 +102,11 @@ class VacancyServiceTest {
         @DisplayName("Успех: владелец может обновить свою вакансию")
         void update_Success() {
             Vacancy existing = Vacancy.builder().id(VACANCY_ID).employerId(USER_ID).build();
-            VacancyDto updateDto = VacancyDto.builder().id(VACANCY_ID).title("New Title").employerId(USER_ID).build();
+            VacancyDto updateDto = VacancyDto.builder()
+                    .id(VACANCY_ID).title("New Title").employerId(USER_ID).companyName("Best Company").build();
 
             when(repository.findById(VACANCY_ID)).thenReturn(Optional.of(existing));
+            when(companyService.findOrCreateByName("Best Company", USER_ID)).thenReturn(stubCompany);
             when(repository.save(any(Vacancy.class))).thenAnswer(i -> i.getArgument(0));
 
             Vacancy result = vacancyService.update(updateDto, USER_ID);
