@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,7 @@ public class CompanyController {
         return companyMapper.toDto(service.getById(id));
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Get my company", description = "Returns the company belonging to the authenticated employer (identified via `X-User-Id`). Returns 204 if no company found.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Company found",
@@ -79,6 +81,7 @@ public class CompanyController {
                 .orElse(ResponseEntity.noContent().build());
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Create a company", description = "Creates a company profile for the authenticated employer. One employer can have one company.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Company created",
@@ -96,6 +99,7 @@ public class CompanyController {
         return companyMapper.toDto(company);
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Update a company")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Updated company",

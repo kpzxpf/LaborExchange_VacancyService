@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Set;
 
-@Tag(name = "Vacancies", description = "Job vacancy management")
+@Tag(name = "Vacancies", description = "Job vacancy CRUD, skill management, and Elasticsearch indexing")
 @RestController
 @RequestMapping("/api/vacancies")
 @RequiredArgsConstructor
@@ -49,6 +50,7 @@ public class VacancyController {
         return service.getById(id);
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Create a vacancy",
             description = "Creates a new job vacancy. Only EMPLOYER role is allowed (enforced by Gateway). The employer ID is taken from `X-User-Id`. Publishes a VacancyIndexEvent to Kafka."
@@ -68,6 +70,7 @@ public class VacancyController {
         return vacancyMapper.toDto(service.create(vacancyDto));
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Update a vacancy", description = "Only the employer who owns the vacancy may update it.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Updated vacancy",
@@ -86,6 +89,7 @@ public class VacancyController {
         return vacancyMapper.toDto(service.update(vacancyDto, userId));
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Publish a vacancy", description = "Makes the vacancy visible in search results. Republishes VacancyIndexEvent.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Published"),
@@ -100,6 +104,7 @@ public class VacancyController {
         service.updatePublishStatus(id, userId, true);
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Unpublish a vacancy", description = "Hides the vacancy from public search.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Unpublished"),
@@ -123,6 +128,7 @@ public class VacancyController {
         return service.getByEmployerId(userId, pageable).map(vacancyMapper::toDto);
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Delete a vacancy", description = "Only EMPLOYER role is allowed (enforced by Gateway). Only the vacancy owner may delete it.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Deleted"),
@@ -145,6 +151,7 @@ public class VacancyController {
         return service.getSkillIds(id);
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Add a skill to a vacancy")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Skill added"),
@@ -160,6 +167,7 @@ public class VacancyController {
         service.addSkill(id, skillId, userId);
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Remove a skill from a vacancy")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Skill removed"),
@@ -174,6 +182,7 @@ public class VacancyController {
         service.removeSkill(id, skillId, userId);
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Replace all skills on a vacancy", description = "Replaces the current skill set with the provided IDs. Re-indexes the vacancy in Elasticsearch.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Skills updated"),
