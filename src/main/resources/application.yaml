@@ -13,6 +13,7 @@ spring:
     bootstrap-servers: localhost:9092
     topics:
       indexing-vacancy: indexing-vacancy
+      vacancy-views: vacancy-views
 
   logging:
     level:
@@ -51,7 +52,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -105,6 +106,12 @@ management:
     export:
       prometheus:
         enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://${ZIPKIN_HOST:localhost}:9411/api/v2/spans
 
 resilience4j:
   circuitbreaker:

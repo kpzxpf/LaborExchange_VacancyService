@@ -1,8 +1,10 @@
 package com.vlz.ladorexchange_vacancyservice.controller;
 
 import com.vlz.ladorexchange_vacancyservice.dto.VacancyDto;
+import com.vlz.ladorexchange_vacancyservice.dto.VacancyViewEvent;
 import com.vlz.ladorexchange_vacancyservice.entity.Vacancy;
 import com.vlz.ladorexchange_vacancyservice.mapper.VacancyMapper;
+import com.vlz.ladorexchange_vacancyservice.producer.VacancyViewProducer;
 import com.vlz.ladorexchange_vacancyservice.service.VacancyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,6 +31,7 @@ public class VacancyController {
 
     private final VacancyService service;
     private final VacancyMapper vacancyMapper;
+    private final VacancyViewProducer viewProducer;
 
     @Operation(summary = "Get all published vacancies (paginated)")
     @ApiResponse(responseCode = "200", description = "Page of vacancies")
@@ -46,8 +49,21 @@ public class VacancyController {
     })
     @GetMapping("/{id}")
     public VacancyDto getById(
-            @Parameter(description = "Vacancy ID", required = true) @PathVariable Long id) {
-        return service.getById(id);
+            @Parameter(description = "Vacancy ID", required = true) @PathVariable Long id,
+            @Parameter(description = "Viewer user ID (injected by Gateway, optional)")
+            @RequestHeader(value = "X-User-Id", required = false) Long viewerId,
+            @Parameter(description = "Viewer role (injected by Gateway, optional)")
+            @RequestHeader(value = "X-User-Role", required = false) String viewerRole) {
+        VacancyDto dto = service.getById(id);
+        viewProducer.send(VacancyViewEvent.builder()
+                .vacancyId(id)
+                .vacancyTitle(dto.getTitle())
+                .employerId(dto.getEmployerId())
+                .viewerId(viewerId)
+                .viewerRole(viewerRole)
+                .viewedAt(java.time.LocalDateTime.now())
+                .build());
+        return dto;
     }
 
     @SecurityRequirement(name = "Bearer Authentication")
@@ -204,6 +220,36 @@ public class VacancyController {
             @Parameter(description = "Vacancy ID", required = true) @PathVariable Long id) {
         var company = service.findById(id).getCompany();
         return company != null ? company.getName() : "";
+    }
+
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Bulk publish vacancies", description = "Publish multiple vacancies at once. Only the owner's vacancies are published.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Vacancies published"),
+            @ApiResponse(responseCode = "403", description = "Forbidden — not the vacancy owner"),
+            @ApiResponse(responseCode = "404", description = "One or more vacancies not found")
+    })
+    @PostMapping("/bulk-publish")
+    public void bulkPublish(
+            @RequestBody List<Long> ids,
+            @Parameter(description = "Authenticated user ID (injected by Gateway)", required = true)
+            @RequestHeader("X-User-Id") Long userId) {
+        service.bulkPublish(ids, userId);
+    }
+
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Bulk unpublish vacancies")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Vacancies unpublished"),
+            @ApiResponse(responseCode = "403", description = "Forbidden — not the vacancy owner"),
+            @ApiResponse(responseCode = "404", description = "One or more vacancies not found")
+    })
+    @PostMapping("/bulk-unpublish")
+    public void bulkUnpublish(
+            @RequestBody List<Long> ids,
+            @Parameter(description = "Authenticated user ID (injected by Gateway)", required = true)
+            @RequestHeader("X-User-Id") Long userId) {
+        service.bulkUnpublish(ids, userId);
     }
 
     @Operation(summary = "Reindex all published vacancies", description = "Pushes all published vacancies back to Elasticsearch. Admin / maintenance operation.")

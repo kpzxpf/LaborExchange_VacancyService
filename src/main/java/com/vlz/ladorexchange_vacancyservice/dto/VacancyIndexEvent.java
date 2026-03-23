@@ -20,5 +20,8 @@ public class VacancyIndexEvent {
     private String location;
     private Set<String> skills;
     private Double salary;
+    private String employmentType;
+    private String workFormat;
     private LocalDateTime createdAt;
+    private boolean deleted;
 }

@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -37,16 +38,26 @@ public class Vacancy {
 
     private Long employerId;
 
+    @Builder.Default
     @Column(name = "is_published", nullable = false)
     private boolean isPublished = false;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "employment_type")
+    private EmploymentType employmentType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_format")
+    private WorkFormat workFormat;
+
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "vacancy_skills", joinColumns = @JoinColumn(name = "vacancy_id"))
     @Column(name = "skill_id")
+    @BatchSize(size = 20)
     private Set<Long> skillIds;
 
     @Column(name = "created_at")

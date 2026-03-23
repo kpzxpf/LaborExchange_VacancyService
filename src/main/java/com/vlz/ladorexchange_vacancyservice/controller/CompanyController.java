@@ -125,14 +125,44 @@ public class CompanyController {
         return service.getCompanyNameByVacancyId(id);
     }
 
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(summary = "Delete a company")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Deleted"),
+            @ApiResponse(responseCode = "403", description = "Forbidden — not the company owner"),
             @ApiResponse(responseCode = "404", description = "Company not found")
     })
     @DeleteMapping("/{id}")
     public void delete(
+            @Parameter(description = "Company ID", required = true) @PathVariable Long id,
+            @Parameter(description = "Authenticated user ID (injected by Gateway)", required = true)
+            @RequestHeader("X-User-Id") Long userId) {
+        service.delete(id, userId);
+    }
+
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Verify a company (Admin only)", description = "Sets isVerified=true. Only ADMIN role (enforced by Gateway).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Company verified",
+                    content = @Content(schema = @Schema(implementation = CompanyDto.class))),
+            @ApiResponse(responseCode = "404", description = "Company not found")
+    })
+    @PatchMapping("/{id}/verify")
+    public CompanyDto verify(
             @Parameter(description = "Company ID", required = true) @PathVariable Long id) {
-        service.delete(id);
+        return service.verify(id);
+    }
+
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(summary = "Unverify a company (Admin only)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Company unverified",
+                    content = @Content(schema = @Schema(implementation = CompanyDto.class))),
+            @ApiResponse(responseCode = "404", description = "Company not found")
+    })
+    @PatchMapping("/{id}/unverify")
+    public CompanyDto unverify(
+            @Parameter(description = "Company ID", required = true) @PathVariable Long id) {
+        return service.unverify(id);
     }
 }

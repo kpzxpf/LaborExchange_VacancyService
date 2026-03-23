@@ -1,0 +1,25 @@
+# Banned words list for content moderation
+# Lines starting with # are comments. One word/phrase per line. Case-insensitive matching.
+# Add prohibited terms below — both Russian and English are supported.
+
+# === Spam / Scam ===
+казино
+casino
+кредит без справок
+быстрые деньги
+заработок без вложений
+финансовая пирамида
+млм
+mlm
+нигерийское письмо
+
+# === Explicit content markers ===
+эскорт
+escort
+интим услуги
+секс услуги
+
+# === Hateful / Discriminatory ===
+только для мужчин
+только для женщин
+без инвалидов

@@ -12,5 +12,6 @@ import java.util.List;
 public interface VacancyRepository extends JpaRepository<Vacancy, Long> {
     Page<Vacancy> findAllByIsPublishedTrue(Pageable pageable);
     Page<Vacancy> findAllByEmployerId(Long employerId, Pageable pageable);
+    List<Vacancy> findAllByEmployerId(Long employerId);
     List<Vacancy> findAllByIsPublishedTrue();
 }

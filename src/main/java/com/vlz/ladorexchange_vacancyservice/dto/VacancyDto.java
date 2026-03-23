@@ -1,5 +1,7 @@
 package com.vlz.ladorexchange_vacancyservice.dto;
 
+import com.vlz.ladorexchange_vacancyservice.entity.EmploymentType;
+import com.vlz.ladorexchange_vacancyservice.entity.WorkFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -44,6 +46,12 @@ public class VacancyDto {
 
     @Schema(description = "Whether the vacancy is visible in public search", example = "true")
     private boolean isPublished;
+
+    @Schema(description = "Employment type", example = "FULL_TIME", allowableValues = {"FULL_TIME","PART_TIME","CONTRACT","FREELANCE","INTERNSHIP"})
+    private EmploymentType employmentType;
+
+    @Schema(description = "Work format", example = "REMOTE", allowableValues = {"OFFICE","REMOTE","HYBRID"})
+    private WorkFormat workFormat;
 
     @Schema(description = "Creation timestamp", example = "2026-03-20T12:00:00")
     private LocalDateTime createdAt;

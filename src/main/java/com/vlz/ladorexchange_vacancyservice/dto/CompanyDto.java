@@ -49,4 +49,7 @@ public class CompanyDto {
     @Schema(description = "Company website URL", example = "https://acme.ru")
     @URL(message = "Website must be a valid URL")
     private String website;
+
+    @Schema(description = "Whether this company has been verified by admin")
+    private boolean verified;
 }

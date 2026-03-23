@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -40,6 +41,25 @@ public class SkillRetryClient {
     public Set<String> getNameSkillsByIdsFallback(List<Long> skillIds, Exception e) {
         log.warn("SkillService circuit breaker open for getNameSkillsByIds: {}", e.getMessage());
         return Collections.emptySet();
+    }
+
+    @CircuitBreaker(name = "skillService", fallbackMethod = "getSkillMapByIdsFallback")
+    @Retryable(
+            retryFor = { Exception.class },
+            maxAttemptsExpression = "${spring.retry.max-attempts}",
+            backoff = @Backoff(delayExpression = "${spring.retry.delay}")
+    )
+    public Map<Long, String> getSkillMapByIds(List<Long> skillIds) {
+        if (skillIds == null || skillIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        log.info("Fetching skill map for skillIds: {}", skillIds);
+        return skillServiceClient.findSkillMapByIds(skillIds);
+    }
+
+    public Map<Long, String> getSkillMapByIdsFallback(List<Long> skillIds, Exception e) {
+        log.warn("SkillService circuit breaker open for getSkillMapByIds: {}", e.getMessage());
+        return Collections.emptyMap();
     }
 
     @Recover

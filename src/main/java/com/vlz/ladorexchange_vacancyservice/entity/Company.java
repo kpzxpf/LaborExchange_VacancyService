@@ -49,6 +49,10 @@ public class Company {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Builder.Default
+    @Column(name = "is_verified", nullable = false)
+    private boolean isVerified = false;
+
     @JsonIgnore
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Vacancy> vacancies;
