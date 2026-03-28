@@ -1,5 +1,6 @@
 package com.vlz.ladorexchange_vacancyservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.vlz.ladorexchange_vacancyservice.entity.EmploymentType;
 import com.vlz.ladorexchange_vacancyservice.entity.WorkFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -45,7 +46,8 @@ public class VacancyDto {
     private Double salary;
 
     @Schema(description = "Whether the vacancy is visible in public search", example = "true")
-    private boolean isPublished;
+    @JsonProperty("isPublished")
+    private Boolean isPublished;
 
     @Schema(description = "Employment type", example = "FULL_TIME", allowableValues = {"FULL_TIME","PART_TIME","CONTRACT","FREELANCE","INTERNSHIP"})
     private EmploymentType employmentType;

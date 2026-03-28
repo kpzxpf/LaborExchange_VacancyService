@@ -76,7 +76,7 @@ public class VacancyService {
                 .salary(vacancyDto.getSalary())
                 .employerId(vacancyDto.getEmployerId())
                 .company(companyService.findOrCreateByName(vacancyDto.getCompanyName(), vacancyDto.getEmployerId()))
-                .isPublished(vacancyDto.isPublished())
+                .isPublished(Boolean.TRUE.equals(vacancyDto.getIsPublished()))
                 .employmentType(vacancyDto.getEmploymentType())
                 .workFormat(vacancyDto.getWorkFormat())
                 .build();

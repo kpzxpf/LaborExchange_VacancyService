@@ -11,5 +11,6 @@ public interface VacancyMapper {
 
     @Mapping(target = "companyName", source = "company.name")
     @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "isPublished", source = "published")
     VacancyDto toDto(Vacancy vacancy);
 }

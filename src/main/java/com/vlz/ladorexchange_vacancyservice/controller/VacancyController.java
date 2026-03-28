@@ -55,14 +55,16 @@ public class VacancyController {
             @Parameter(description = "Viewer role (injected by Gateway, optional)")
             @RequestHeader(value = "X-User-Role", required = false) String viewerRole) {
         VacancyDto dto = service.getById(id);
-        viewProducer.send(VacancyViewEvent.builder()
-                .vacancyId(id)
-                .vacancyTitle(dto.getTitle())
-                .employerId(dto.getEmployerId())
-                .viewerId(viewerId)
-                .viewerRole(viewerRole)
-                .viewedAt(java.time.LocalDateTime.now())
-                .build());
+        if (viewerId == null || !viewerId.equals(dto.getEmployerId())) {
+            viewProducer.send(VacancyViewEvent.builder()
+                    .vacancyId(id)
+                    .vacancyTitle(dto.getTitle())
+                    .employerId(dto.getEmployerId())
+                    .viewerId(viewerId)
+                    .viewerRole(viewerRole)
+                    .viewedAt(java.time.LocalDateTime.now())
+                    .build());
+        }
         return dto;
     }
 
