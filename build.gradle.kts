@@ -64,6 +64,7 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
+    runtimeOnly("io.prometheus:prometheus-metrics-exposition-formats:1.2.1")
 
     // Distributed Tracing
     implementation("io.micrometer:micrometer-tracing-bridge-brave")
